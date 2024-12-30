@@ -27,36 +27,25 @@ public class GameRenderer {
 		this.spriteBatch = new SpriteBatch();
 	}
 
-	public void render(String playerAction) {
-		this.renderShapes();
+	public void render(String playerAction, String enemyAction) {
+
 		this.renderPlayer(playerAction);
+		this.renderEnemy(enemyAction);
+
 		this.renderHUD();
-	}
-
-	private void renderShapes() {
-		this.shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-
-		this.renderEnemyShape();
-		this.renderStaminaBar();
-
-		this.shapeRenderer.end();
-	}
-
-	private void renderEnemyShape() {
-		this.shapeRenderer.setColor(Color.RED);
-		this.shapeRenderer.rect(this.enemy.getX(), this.enemy.getY(), this.enemy.getSize(), this.enemy.getSize());
-	}
-
-	private void renderStaminaBar() {
-		this.shapeRenderer.setColor(Color.GREEN);
-		float staminaBarWidth = 100 * (this.enemy.getStamina() / 100f);
-		this.shapeRenderer.rect(this.enemy.getX(), this.enemy.getY() + 60, staminaBarWidth, 10);
 	}
 
 	private void renderPlayer(String playerAction) {
 		this.spriteBatch.begin();
 		this.player.update(Gdx.graphics.getDeltaTime());
 		this.player.render(this.spriteBatch, playerAction);
+		this.spriteBatch.end();
+	}
+
+	private void renderEnemy(String enemyAction) {
+		this.spriteBatch.begin();
+		this.enemy.update(Gdx.graphics.getDeltaTime());
+		this.enemy.render(this.spriteBatch, enemyAction);
 		this.spriteBatch.end();
 	}
 

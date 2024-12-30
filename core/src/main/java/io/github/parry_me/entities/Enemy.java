@@ -1,48 +1,105 @@
 package io.github.parry_me.entities;
 
-public class Enemy {
-    private float x;
-    private float y;
-    private final float size;
-    private int stamina = 100;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import io.github.parry_me.entities.animation.EnemyAnimation;
 
-    public Enemy(float x, float y, float size) {
-        this.x = x;
-        this.y = y;
-        this.size = size;
-    }
+import java.util.Random;
 
-    public void resetPosition() {
-        this.x = 500f;
-        this.y = 100f;
-    }
+public class Enemy extends EnemyAnimation {
 
-    public void reduceStamina(int amount) {
-        stamina -= amount;
-        if (stamina < 0) stamina = 0; // Garante que a estamina não fique negativa
-    }
+	private float x;
+	private float y;
+	private float size;
+	private float stateTime = 0f;
+	private int stamina = 100;
+	private boolean isAttacking;
 
-    public int getStamina() {
-        return stamina;
-    }
+	private String currentAction = "idle";
+	private final Random random = new Random();
 
-    public boolean isAttacking() {
-        return false;
-    }
+	public Enemy(float x, float y, float size) {
+		super();
+		this.x = x;
+		this.y = y;
+		this.size = size;
+	}
 
-    public float getX() {
-        return x;
-    }
+	public void update(float deltaTime) {
+		stateTime += deltaTime;
+	}
 
-    public float getY() {
-        return y;
-    }
+	public void render(SpriteBatch spriteBatch, String action) {
+		if (!this.currentAction.equalsIgnoreCase(action)) {
+			currentAction = action;
+			stateTime = 0f;
+		}
 
-    public float getSize() {
-        return size;
-    }
+		Animation<TextureRegion> currentAnimation = this.getCurrentAnimation(action);
 
-    public void setStamina(int stamina) {
-        this.stamina = stamina;
-    }
+		TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTime, true);
+
+		spriteBatch.draw(currentFrame, x, y, size, size);
+	}
+
+	private Animation<TextureRegion> getCurrentAnimation(String action) {
+		switch (action.toLowerCase()) {
+		case "protect":
+			return protectAnimation;
+		case "attack":
+			return attackAnimations[random.nextInt(attackAnimations.length)];
+		default:
+			return idleAnimation;
+		}
+	}
+
+	public void move(float dx, float dy) {
+		this.x += dx;
+		this.y += dy;
+	}
+
+	public void resetPosition() {
+		this.x = 450f;
+		this.y = 100f;
+	}
+
+	public void reduceStamina(int amount) {
+		stamina -= amount;
+		if (stamina < 0) {
+			stamina = 0;
+		}
+	}
+
+	public float getX() {
+		return x;
+	}
+
+	public float getY() {
+		return y;
+	}
+
+	public float getSize() {
+		return size;
+	}
+
+	public float getStamina() {
+		return this.stamina;
+	}
+
+	public boolean isAttacking() {
+		return this.isAttacking;
+	}
+
+	public void setIsAttacking(boolean state) {
+		this.isAttacking = state;
+	}
+
+	public void setStamina(int stamina) {
+		this.stamina = stamina;
+	}
+	
+	public boolean isAttackDefendable() {
+		return random.nextBoolean();
+	}
 }

@@ -1,5 +1,7 @@
 package io.github.parry_me.entities;
 
+import java.util.Random;
+
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -12,8 +14,12 @@ public class Player extends PlayerAnimation {
 	private float size;
 	private float stateTime = 0f;
 
+	private int attackNumber = 0;
 	private int level = 1;
+
 	private String currentAction = "idle";
+
+	private final Random random = new Random();
 
 	private boolean isAttacking = false;
 
@@ -25,24 +31,26 @@ public class Player extends PlayerAnimation {
 	}
 
 	public void update(float deltaTime) {
-		stateTime += deltaTime;
+		this.stateTime += deltaTime;
 
-		if ("attack".equalsIgnoreCase(currentAction) && attackAnimations.isAnimationFinished(stateTime)) {
-			isAttacking = false;
+		if ("attack".equalsIgnoreCase(this.currentAction) && this.attackAnimations[this.attackNumber].isAnimationFinished(this.stateTime)) {
+			this.isAttacking = false;
+			this.attackNumber = 0;
 		}
 	}
 
 	public void render(SpriteBatch spriteBatch, String action) {
-		if (!currentAction.equalsIgnoreCase(action)) {
-			if ("attack".equalsIgnoreCase(action) && !isAttacking) {
-				stateTime = 0f;
-				isAttacking = true;
+		if (!this.currentAction.equalsIgnoreCase(action)) {
+			if ("attack".equalsIgnoreCase(action) && !this.isAttacking) {
+				this.stateTime = 0f;
+				this.isAttacking = true;
+				this.attackNumber = this.random.nextInt(this.attackAnimations.length);
 			}
 
-			currentAction = action;
+			this.currentAction = action;
 		}
 
-		Animation<TextureRegion> currentAnimation = getCurrentAnimation(action);
+		Animation<TextureRegion> currentAnimation = this.getCurrentAnimation(action);
 
 		TextureRegion currentFrame = currentAnimation.getKeyFrame(stateTime, true);
 
@@ -52,13 +60,13 @@ public class Player extends PlayerAnimation {
 	private Animation<TextureRegion> getCurrentAnimation(String action) {
 		switch (action.toLowerCase()) {
 		case "run":
-			return runAnimation;
+			return this.runAnimation;
 		case "walk":
-			return walkAnimation;
+			return this.walkAnimation;
 		case "attack":
-			return attackAnimations;
+			return this.getRandomAttackAnimation(1);
 		default:
-			return idleAnimation;
+			return this.idleAnimation;
 		}
 	}
 
@@ -73,8 +81,28 @@ public class Player extends PlayerAnimation {
 	}
 
 	public boolean collidesWith(Enemy enemy) {
-		return this.x < enemy.getX() + enemy.getSize() && this.x + this.size > enemy.getX()
-				&& this.y < enemy.getY() + enemy.getSize() && this.y + this.size > enemy.getY();
+		float collisionMargin = 10f; // Margem para ajustar a proximidade da colisão
+
+		// Define os limites reduzidos do jogador
+		float playerLeftBoundary = this.x + collisionMargin;
+		float playerRightBoundary = this.x + this.size - collisionMargin;
+		float playerTopBoundary = this.y + collisionMargin;
+		float playerBottomBoundary = this.y + this.size - collisionMargin;
+
+		// Define os limites reduzidos do inimigo
+		float enemyLeftBoundary = enemy.getX() + collisionMargin;
+		float enemyRightBoundary = enemy.getX() + enemy.getSize() - collisionMargin;
+		float enemyTopBoundary = enemy.getY() + collisionMargin;
+		float enemyBottomBoundary = enemy.getY() + enemy.getSize() - collisionMargin;
+
+		// Verifica se os limites se sobrepõem
+		boolean isCollidingHorizontally = playerLeftBoundary < enemyRightBoundary
+				&& playerRightBoundary > enemyLeftBoundary;
+		boolean isCollidingVertically = playerTopBoundary < enemyBottomBoundary
+				&& playerBottomBoundary > enemyTopBoundary;
+
+		// Retorna true se houver colisão tanto horizontal quanto verticalmente
+		return isCollidingHorizontally && isCollidingVertically;
 	}
 
 	public int getLevel() {
